@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Text-to-Speech Converter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* Base Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f7f7f7;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        .container {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 100%;
+            text-align: center;
+            animation: fadeIn 1s ease-out;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 2.4em;
+            color: #4a90e2;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        /* Textarea Styles */
+        textarea {
+            width: 100%;
+            height: 120px;
+            max-width: 100%; /* Ensure it doesn't overflow */
+            padding: 12px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            font-size: 1.1em;
+            resize: none;
+            margin-bottom: 20px;
+            outline: none;
+            background-color: #f9f9f9;
+            color: #333;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            border-color: #4a90e2;
+            box-shadow: 0 0 8px rgba(74, 144, 226, 0.3);
+        }
+
+        /* Voice Selection Dropdown */
+        .voice-select-wrapper {
+            position: relative;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .voice-select-label {
+            font-weight: 500;
+            display: block;
+            margin-bottom: 10px;
+            color: #888;
+        }
+
+        .voice-select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #ccc;
+            font-size: 1.1em;
+            background-color: #f9f9f9;
+            color: #333;
+            appearance: none;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        .voice-select:hover,
+        .voice-select:focus {
+            border-color: #4a90e2;
+            box-shadow: 0 0 8px rgba(74, 144, 226, 0.3);
+        }
+
+        /* Button Styles */
+        button {
+            background-color: #4a90e2;
+            color: #fff;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s ease, background-color 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        button:hover {
+            background-color: #357ab7;
+            transform: scale(1.05);
+        }
+
+        /* Audio Player */
+        .audio-container {
+            margin-top: 20px;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 15px;
+            border-radius: 10px;
+        }
+
+        .download-message {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        /* Loading Popup */
+        .loading-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-content {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #4a90e2;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .container {
+                padding: 20px;
+                margin: 0 10px; /* Ensures there's no space out of bounds */
+            }
+
+            textarea {
+                height: 100px;
+                font-size: 1em;
+                padding: 10px;
+            }
+
+            .voice-select {
+                font-size: 1em;
+                padding: 10px;
+            }
+
+            button {
+                font-size: 1.1em;
+                padding: 12px 20px;
+            }
+
+            .audio-container {
+                margin-top: 15px;
+            }
+
+            .download-message {
+                font-size: 0.8em;
+            }
+
+            .loading-content {
+                padding: 20px;
+            }
+
+            .spinner {
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Text-to-Speech Converter</h1>
+
+        <textarea id="textInput" placeholder="Enter your text here..."></textarea>
+
+        <div class="voice-select-wrapper">
+            <label for="voiceSelect" class="voice-select-label">Select Voice</label>
+            <select id="voiceSelect" class="voice-select">
+              <option value="ErXwobaYiN019PkySvjV">Antoni</option>
+              <option value="VR6AewLTigWG4xSOukaG">Arnold</option>
+              <option value="2EiwWnXFnvU5JabPnv8n">Clyde</option>
+              <option value="CYw3kZ02Hs0563khs1Fj">Dave</option>
+              <option value="ThT5KcBeYPX3keUQqHPh">Dorothy</option>
+              <option value="29vD33N1CtxCmqQRPOHJ">Drew</option>
+              <option value="LcfcDJNUP1GQjkzn1xUU">Emily</option>
+              <option value="g5CljZEefAph4nQFvHAz">Ethan</option>
+              <option value="D38z5RcWu1voky8WS1ja">Fin</option>
+              <option value="jsCqWAovK2LkecY7zX14">Freya</option>
+              <option value="Yko7PKHZNXotIFUBG719">George</option>
+              <option value="jBpfulE2acCO8z3wKNLI">Gigi</option>
+              <option value="zcAOhNBS3c14rBihAFp1">Giovanni</option>
+              <option value="z9fAnlkpzviPz146aGWa">Glinda</option>
+              <option value="oWAxZDx7w5VEj9dCyTzz">Grace</option>
+              <option value="SOYHLrjzK2X1ezoPC6cr">Harry</option>
+              <option value="ZQe5CZNOzWyzPSCn5a3c">James</option>
+              <option value="bVMeCyTHy58xNoL34h3p">Jeremy</option>
+              <option value="t0jbNIBVZ17f02VDIeMI">Jessie</option>
+              <option value="Zlb1dXrM653N07WRdFW3">Joseph</option>
+              <option value="TxGEqnHWrfWFTfGW9XJX">Josh</option>
+              <option value="flq6f7yk4E4fJM5XTYUZ">Michael</option>
+              <option value="zrHiDhphv9ZnVXBqCLjz">Mimi</option>
+              <option value="piTKgcLEGmPE4e6mEKli">Nicole</option>
+              <option value="ODq5zmih8GrVes37Dizd">Patrick</option>
+              <option value="5Q0t7uMcjvnagumLfvZi">Paul</option>
+              <option value="21m00Tcm4TlvDq8ikWAM">Rachel</option>
+              <option value="yoZ06aMxZJJ28mfd3POQ">Sam</option>
+              <option value="pMsXgVXv3BLzUgSXRPIE">Serena</option>
+              <option value="GBv7mTt0atlp3Br8iCZE">Thomas</option>
+            </select>
+        </div>
+
+        <button onclick="convertTextToSpeech()">Convert to Speech</button>
+
+        <div class="audio-container">
+            <audio id="audioPlayer" controls></audio>
+            <div class="download-message">You can download the audio via the three dots in the audio player.</div>
+        </div>
+    </div>
+
+    <!-- Loading Popup -->
+    <div class="loading-popup" id="loadingPopup">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Generating your audio, please wait...</p>
+        </div>
+    </div>
+
+    <script>
+        async function convertTextToSpeech() {
+            const text = document.getElementById('textInput').value.trim();
+            const voiceId = document.getElementById('voiceSelect').value;
+            const apiKey = 'sk_88606f70dd442bc88152fc8676586da210cc5badb96eb98f';
+
+            if (!text) {
+                alert('Please enter some text!');
+                return;
+            }
+
+            // Show loading popup
+            document.getElementById('loadingPopup').style.display = 'flex';
+
+            try {
+                const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'xi-api-key': apiKey
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        model_id: 'eleven_multilingual_v1',
+                        voice_settings: { stability: 0.5, similarity_boost: 0.5 }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error generating speech. Please try again.');
+                }
+
+                const audioBlob = await response.blob();
+                document.getElementById('audioPlayer').src = URL.createObjectURL(audioBlob);
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                document.getElementById('loadingPopup').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
